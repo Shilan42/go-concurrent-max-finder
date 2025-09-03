@@ -17,7 +17,7 @@ func TestGenerateRandomElements(t *testing.T) {
 		wantErr bool   // Ожидаем ли ошибку
 		wantLen int    // Ожидаемая длина слайса
 	}{
-		// Тест на генерацию пустого массива (размер 0)
+		// Тест на генерацию пустого слайса (размер 0)
 		{
 			name:    "ZeroSizeInput",
 			size:    0,
@@ -45,7 +45,7 @@ func TestGenerateRandomElements(t *testing.T) {
 			wantErr: false,
 			wantLen: 1,
 		},
-		// Тест на генерацию большого массива
+		// Тест на генерацию большого слайса
 		{
 			name:    "LargeSizeInput",
 			size:    1000000000,
@@ -86,42 +86,42 @@ func TestMaximum(t *testing.T) {
 		wantErr bool   // Ожидаем ли ошибку при выполнении
 		wantInt int    // Ожидаемое максимальное значение
 	}{
-		// Тест на пустой входной массив
+		// Тест на пустой входной слайс
 		{
 			name:    "EmptyInput",
 			data:    []int{},
 			wantErr: true,
 			wantInt: 0,
 		},
-		// Тест на массив с одним элементом
+		// Тест на слайс с одним элементом
 		{
 			name:    "SingleElement",
 			data:    []int{1},
 			wantErr: false,
 			wantInt: 1,
 		},
-		// Тест на большой массив положительных чисел
+		// Тест на большой слайс положительных чисел
 		{
 			name:    "LargeInput",
 			data:    []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 			wantErr: false,
 			wantInt: 10,
 		},
-		// Тест на массив отрицательных чисел
+		// Тест на слайс отрицательных чисел
 		{
 			name:    "NegativeNumbers",
 			data:    []int{-1, -2, -3, -4},
 			wantErr: false,
 			wantInt: -1,
 		},
-		// Тест на массив с разными типами чисел
+		// Тест на слайс с разными типами чисел
 		{
 			name:    "MixedNumbers",
 			data:    []int{-10, 0, 5, -3, 8},
 			wantErr: false,
 			wantInt: 8,
 		},
-		// Тест на массив с одинаковыми элементами
+		// Тест на слайс с одинаковыми элементами
 		{
 			name:    "AllIdentical",
 			data:    []int{5, 5, 5, 5},
@@ -142,14 +142,14 @@ func TestMaximum(t *testing.T) {
 			wantErr: false,
 			wantInt: -1,
 		},
-		// Тест на массив из нулей
+		// Тест на слайс из нулей
 		{
 			name:    "AllZeros",
 			data:    []int{0, 0, 0, 0},
 			wantErr: false,
 			wantInt: 0,
 		},
-		// Тест на массив с повторяющимися максимальными значениями
+		// Тест на слайс с повторяющимися максимальными значениями
 		{
 			name:    "DuplicateMaxValues",
 			data:    []int{3, 7, 7, 2, 7},
@@ -252,7 +252,7 @@ func TestMaxChunks(t *testing.T) {
 			wantInt: 13,
 		},
 		{
-			name:    "Большой массив",
+			name:    "Большой слайс",
 			data:    make([]int, 10000),
 			wantErr: false,
 			wantInt: 0,

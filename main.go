@@ -9,14 +9,14 @@ import (
 )
 
 const (
-	SIZE   = 100_000_000 // Размер массива для генерации случайных чисел
+	SIZE   = 100_000_000 // Размер слайса для генерации случайных чисел
 	CHUNKS = 8           // Количество чанков для параллельной обработки
 )
 
 // Инициализируем глобальный генератор случайных чисел с текущим временем
 var src = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// generateRandomElements генерирует массив случайных чисел заданного размера
+// generateRandomElements генерирует слайс случайных чисел заданного размера
 func generateRandomElements(size int) ([]int, error) {
 
 	// возвращаем пустой слайс и ошибку, если size <= 0
@@ -35,7 +35,7 @@ func generateRandomElements(size int) ([]int, error) {
 	return randomElements, nil
 }
 
-// maximum находит максимальное значение в массиве
+// maximum находит максимальное значение в слайсе
 func maximum(data []int) (int, error) {
 
 	/// Проверяем, что слайс не пустой
@@ -54,7 +54,7 @@ func maximum(data []int) (int, error) {
 	return max, nil
 }
 
-// maxChunks находит максимальное значение в массиве, используя параллельную обработку
+// maxChunks находит максимальное значение в слайсе, используя параллельную обработку
 func maxChunks(data []int) (int, error) {
 
 	// Проверяем, что слайс не пустой
@@ -80,7 +80,7 @@ func maxChunks(data []int) (int, error) {
 	step := len(data) / CHUNKS
 	remainder := len(data) % CHUNKS
 
-	// Разбиваем массив на куски и обрабатываем их параллельно
+	// Разбиваем слайс на куски и обрабатываем их параллельно
 	for i := 0; i < CHUNKS; i++ {
 		start := i * step
 		end := start + step
