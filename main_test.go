@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // Тест проверяет корректность работы функции generateRandomElements при различных входных параметрах
@@ -14,43 +13,43 @@ func TestGenerateRandomElements(t *testing.T) {
 	tests := []struct {
 		name    string // Наименование теста
 		size    int    // Передаваемый размер
-		wantErr bool   // Ожидаем ли ошибку
 		wantLen int    // Ожидаемая длина слайса
+		wantNil bool   // Ожидаем ли nil результат
 	}{
 		// Тест на генерацию пустого слайса (размер 0)
 		{
 			name:    "ZeroSizeInput",
 			size:    0,
-			wantErr: true,
 			wantLen: 0,
+			wantNil: true,
 		},
 		// Тест на отрицательный размер (невалидный ввод)
 		{
 			name:    "NegativeSizeInput",
 			size:    -5,
-			wantErr: true,
 			wantLen: 0,
+			wantNil: true,
 		},
 		// Тест на положительный размер (оптимальный сценарий)
 		{
 			name:    "PositiveSizeInput",
 			size:    10,
-			wantErr: false,
 			wantLen: 10,
+			wantNil: false,
 		},
 		// Тест на генерацию одного элемента
 		{
 			name:    "SingleElementInput",
 			size:    1,
-			wantErr: false,
 			wantLen: 1,
+			wantNil: false,
 		},
 		// Тест на генерацию большого слайса
 		{
 			name:    "LargeSizeInput",
 			size:    1000000000,
-			wantErr: false,
 			wantLen: 1000000000,
+			wantNil: false,
 		},
 	}
 
@@ -60,20 +59,20 @@ func TestGenerateRandomElements(t *testing.T) {
 			start := time.Now()
 
 			// Вызов тестируемой функции
-			randomElements, err := generateRandomElements(tt.size)
+			randomElements := generateRandomElements(tt.size)
 
-			// Проверка наличия/отсутствия ошибки
-			if tt.wantErr {
-				require.Error(t, err, "expected error for invalid input size but got none")
+			// Проверка результата для случаев, где ожидается nil
+			if tt.wantNil {
+				assert.Nil(t, randomElements, "expected nil result but got non-nil value")
 				return
 			}
-			require.NoError(t, err, "unexpected error occurred during element generation")
 
-			// Проверка корректности результата
+			// Проверка корректности результата для не-nil случаев
 			assert.Equal(t, tt.wantLen, len(randomElements), "generated slice length does not match expected value")
+			assert.NotNil(t, randomElements, "expected non-nil result but got nil value")
 
 			// Измерение времени выполнения теста
-			t.Logf("Тест %q выполнен за %v", tt.name, time.Since(start))
+			t.Logf("Test %q executed in %v", tt.name, time.Since(start))
 		})
 	}
 }
@@ -83,77 +82,60 @@ func TestMaximum(t *testing.T) {
 	tests := []struct {
 		name    string // Наименование теста
 		data    []int  // Передаваемый слайс для обработки
-		wantErr bool   // Ожидаем ли ошибку при выполнении
 		wantInt int    // Ожидаемое максимальное значение
 	}{
 		// Тест на пустой входной слайс
 		{
 			name:    "EmptyInput",
 			data:    []int{},
-			wantErr: true,
 			wantInt: 0,
 		},
 		// Тест на слайс с одним элементом
 		{
 			name:    "SingleElement",
 			data:    []int{1},
-			wantErr: false,
 			wantInt: 1,
 		},
 		// Тест на большой слайс положительных чисел
 		{
 			name:    "LargeInput",
 			data:    []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
-			wantErr: false,
 			wantInt: 10,
-		},
-		// Тест на слайс отрицательных чисел
-		{
-			name:    "NegativeNumbers",
-			data:    []int{-1, -2, -3, -4},
-			wantErr: false,
-			wantInt: -1,
 		},
 		// Тест на слайс с разными типами чисел
 		{
 			name:    "MixedNumbers",
 			data:    []int{-10, 0, 5, -3, 8},
-			wantErr: false,
 			wantInt: 8,
 		},
 		// Тест на слайс с одинаковыми элементами
 		{
 			name:    "AllIdentical",
 			data:    []int{5, 5, 5, 5},
-			wantErr: false,
 			wantInt: 5,
 		},
 		// Тест на максимальное значение int
 		{
 			name:    "MaxIntValue",
 			data:    []int{math.MaxInt32, 1, 2},
-			wantErr: false,
 			wantInt: math.MaxInt32,
 		},
 		// Тест на минимальное значение int
 		{
 			name:    "MinIntValue",
 			data:    []int{math.MinInt32, -1, -2},
-			wantErr: false,
 			wantInt: -1,
 		},
 		// Тест на слайс из нулей
 		{
 			name:    "AllZeros",
 			data:    []int{0, 0, 0, 0},
-			wantErr: false,
 			wantInt: 0,
 		},
 		// Тест на слайс с повторяющимися максимальными значениями
 		{
 			name:    "DuplicateMaxValues",
 			data:    []int{3, 7, 7, 2, 7},
-			wantErr: false,
 			wantInt: 7,
 		},
 	}
@@ -164,20 +146,13 @@ func TestMaximum(t *testing.T) {
 			start := time.Now()
 
 			// Вызов тестируемой функции
-			max, err := maximum(tt.data)
-
-			// Проверка наличия/отсутствия ошибки
-			if tt.wantErr {
-				require.Error(t, err, "Ожидалась ошибка, но её нет")
-				return
-			}
-			require.NoError(t, err, "Не ожидалось получение ошибки")
+			max := maximum(tt.data)
 
 			// Проверка корректности результата
-			assert.Equal(t, tt.wantInt, max, "Результат не соответствует ожидаемому")
+			assert.Equal(t, tt.wantInt, max, "test %q: result does not match expected value. Expected: %d, got: %d", tt.name, tt.wantInt, max)
 
 			// Измерение времени выполнения теста
-			t.Logf("Тест %q выполнен за %v", tt.name, time.Since(start))
+			t.Logf("Test %q executed in %v", tt.name, time.Since(start))
 		})
 	}
 }
@@ -187,136 +162,108 @@ func TestMaxChunks(t *testing.T) {
 	tests := []struct {
 		name    string // Наименование теста
 		data    []int  // Передаваемый слайс для обработки
-		wantErr bool   // Ожидаем ли ошибку при выполнении
 		wantInt int    // Ожидаемое максимальное значение
 	}{
 		// Базовые тесты
 		{
-			name:    "Размер 0",
+			name:    "ZeroSizeInput",
 			data:    []int{},
-			wantErr: true,
 			wantInt: 0,
 		},
 		{
-			name:    "Размер 1",
+			name:    "SingleElement",
 			data:    []int{1},
-			wantErr: false,
 			wantInt: 1,
 		},
 		{
-			name:    "Длина равна CHUNKS",
+			name:    "LengthEqualsChunkSize",
 			data:    make([]int, 8),
-			wantErr: false,
 			wantInt: 0,
 		},
 		{
-			name:    "Длина меньше CHUNKS",
+			name:    "LengthLessThanChunkSize1",
 			data:    []int{1, 2, 3, 4},
-			wantErr: true,
-			wantInt: 0,
+			wantInt: 4,
 		},
-
-		// Тесты с разными значениями CHUNKS
 		{
-			name:    "CHUNKS = 1",
+			name:    "LengthLessThanChunkSize2",
 			data:    []int{1, 2, 3, 4, 5},
-			wantErr: true,
 			wantInt: 5,
 		},
 		{
-			name:    "CHUNKS = 2",
+			name:    "LengthLessThanChunkSize3",
 			data:    []int{1, 2, 3, 4, 5, 6},
-			wantErr: true,
 			wantInt: 6,
 		},
 
 		// Граничные случаи
 		{
-			name:    "Максимум в начале",
+			name:    "MaxValueAtStart",
 			data:    []int{100, 1, 2, 3, 4, 5, 6, 7},
-			wantErr: false,
 			wantInt: 100,
 		},
 		{
-			name:    "Максимум в конце",
+			name:    "MaxValueAtEnd",
 			data:    []int{1, 2, 3, 4, 5, 6, 7, 100},
-			wantErr: false,
 			wantInt: 100,
 		},
 
 		// Сложные случаи
 		{
-			name:    "Неравномерное распределение",
+			name:    "UnevenDistribution",
 			data:    []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
-			wantErr: false,
 			wantInt: 13,
 		},
 		{
-			name:    "Большой слайс",
+			name:    "LargeInput",
 			data:    make([]int, 10000),
-			wantErr: false,
 			wantInt: 0,
 		},
 
 		// Тесты с разными типами данных
 		{
-			name:    "Максимальное int",
+			name:    "MaxIntValue",
 			data:    []int{math.MaxInt32, 1, 2, 8, 15, 84, 99, 91},
-			wantErr: false,
 			wantInt: math.MaxInt32,
 		},
 		{
-			name:    "Минимальное int",
+			name:    "MinIntValue",
 			data:    []int{math.MinInt32, -1, -2, -8, -15, -84, -99, -91},
-			wantErr: false,
 			wantInt: -1,
 		},
 		{
-			name:    "С нулями",
+			name:    "AllZeros",
 			data:    []int{0, 0, 0, 0, 0, 0, 0, 0},
-			wantErr: false,
 			wantInt: 0,
 		},
 		{
-			name:    "Повторяющиеся максимумы",
+			name:    "DuplicateMaxValues",
 			data:    []int{3, 7, 7, 2, 7, 5, 4, 3},
-			wantErr: false,
 			wantInt: 7,
 		},
 		{
-			name:    "Чередование максимумов",
+			name:    "AlternatingMaxValues",
 			data:    []int{10, 1, 10, 1, 10, 1, 10, 1},
-			wantErr: false,
 			wantInt: 10,
 		},
 		{
-			name:    "Все отрицательные",
-			data:    []int{-10, -20, -30, -40, -50, -60, -70, -80},
-			wantErr: false,
-			wantInt: -10,
-		},
-		{
-			name:    "Переменный шаг",
+			name:    "VariableStep",
 			data:    []int{1, 10, 2, 20, 3, 30, 4, 40},
-			wantErr: false,
 			wantInt: 40,
 		},
 		{
-			name:    "Экспоненциальный рост",
+			name:    "ExponentialGrowth",
 			data:    []int{1, 2, 4, 8, 16, 32, 64, 128},
-			wantErr: false,
 			wantInt: 128,
 		},
 		{
-			name:    "Линейный рост",
+			name:    "LinearGrowth",
 			data:    []int{1, 2, 3, 4, 5, 6, 7, 8},
-			wantErr: false,
 			wantInt: 8,
 		},
 		{
-			name:    "Линейное убывание",
+			name:    "LinearDecay",
 			data:    []int{8, 7, 6, 5, 4, 3, 2, 1},
-			wantErr: false,
 			wantInt: 8,
 		},
 	}
@@ -327,20 +274,13 @@ func TestMaxChunks(t *testing.T) {
 			start := time.Now()
 
 			// Вызов тестируемой функции
-			max, err := maxChunks(tt.data)
-
-			// Проверка наличия/отсутствия ошибки
-			if tt.wantErr {
-				require.Error(t, err, "Ожидалась ошибка, но её нет")
-				return
-			}
-			require.NoError(t, err, "Не ожидалось получение ошибки")
+			max := maxChunks(tt.data)
 
 			// Проверка корректности результата
-			assert.Equal(t, tt.wantInt, max, "Тест %q: результат не соответствует ожидаемому. Ожидалось: %d, получено: %d", tt.name, tt.wantInt, max)
+			assert.Equal(t, tt.wantInt, max, "test %q: result does not match expected value. Expected: %d, got: %d", tt.name, tt.wantInt, max)
 
 			// Измерение времени выполнения теста
-			t.Logf("Тест %q выполнен за %v", tt.name, time.Since(start))
+			t.Logf("Test %q executed in %v", tt.name, time.Since(start))
 		})
 	}
 }

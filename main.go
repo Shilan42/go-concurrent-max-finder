@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"slices"
+	"sync"
 	"time"
 )
 
@@ -17,11 +17,12 @@ const (
 var src = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 // generateRandomElements генерирует слайс случайных чисел заданного размера
-func generateRandomElements(size int) ([]int, error) {
+func generateRandomElements(size int) []int {
 
-	// возвращаем пустой слайс и ошибку, если size <= 0
+	// Логируем ошибку и возвращаем nil при недопустимом размере
 	if size <= 0 {
-		return nil, fmt.Errorf("invalid slice size: %d. The size must be a positive integer greater than zero", size)
+		log.Printf("invalid slice size: %d. The size must be a positive integer greater than zero", size)
+		return nil
 	}
 
 	// Создаем слайс заданного размера
@@ -32,49 +33,49 @@ func generateRandomElements(size int) ([]int, error) {
 		randomElements[i] = src.Int()
 	}
 
-	return randomElements, nil
+	return randomElements
 }
 
 // maximum находит максимальное значение в слайсе
-func maximum(data []int) (int, error) {
+func maximum(data []int) int {
 
-	/// Проверяем, что слайс не пустой
+	// Проверяем, что входной слайс не пустой. Если слайс пуст, логируем ошибку и возвращаем 0
 	if len(data) == 0 {
-		return 0, fmt.Errorf("empty slice provided. The input slice must contain at least one element to determine the maximum value")
+		log.Printf("empty slice provided. The input slice must contain at least one element to determine the maximum value")
+		return 0
 	}
 
-	// Для слайса из одного элемента возвращаем его значение
-	if len(data) == 1 {
-		return data[0], nil
+	// Инициализируем переменную max первым элементом слайса
+	max := data[0]
+
+	// Проходим по всем элементам слайса и сравниваем каждый элемент с текущим максимальным значением
+	for _, num := range data {
+		if num > max {
+			max = num
+		}
 	}
 
-	// Используем встроенную функцию для поиска максимума
-	max := slices.Max(data)
-
-	return max, nil
+	return max
 }
 
 // maxChunks находит максимальное значение в слайсе, используя параллельную обработку
-func maxChunks(data []int) (int, error) {
+func maxChunks(data []int) int {
 
-	// Проверяем, что слайс не пустой
+	// Проверяем, что входной слайс не пустой. Если слайс пуст, логируем ошибку и возвращаем 0
 	if len(data) == 0 {
-		return 0, fmt.Errorf("input slice cannot be empty. Please provide a non-empty slice of integers")
+		log.Printf("empty slice provided. The input slice must contain at least one element to determine the maximum value")
+		return 0
 	}
 
-	// Для слайса из одного элемента возвращаем его значение
-	if len(data) == 1 {
-		return data[0], nil
-	}
-
-	// Проверка, что длина слайса достаточна для разделения на чанки
+	// Проверяем, что длина слайса достаточна для разделения на чанки. Если данных недостаточно, вызываем функцию maximum
 	if len(data) < CHUNKS {
-		return 0, fmt.Errorf("input slice length is insufficient to create required number of chunks")
+		maximum(data)
 	}
 
-	// Создаем канал для хранения максимальных значений из каждого чанка и закрываем канал после использования
-	maxValues := make(chan int, CHUNKS)
-	defer close(maxValues)
+	var wg sync.WaitGroup
+
+	// Создаем слайс для хранения максимальных значений из каждого чанка
+	maxValues := make([]int, CHUNKS)
 
 	// Вычисляем размер каждого чанка
 	step := len(data) / CHUNKS
@@ -82,6 +83,7 @@ func maxChunks(data []int) (int, error) {
 
 	// Разбиваем слайс на куски и обрабатываем их параллельно
 	for i := 0; i < CHUNKS; i++ {
+		wg.Add(1)
 		start := i * step
 		end := start + step
 
@@ -92,50 +94,34 @@ func maxChunks(data []int) (int, error) {
 
 		// Запускаем горутину для обработки каждого чанка
 		go func(start, end int) {
-			maxValues <- slices.Max(data[start:end])
+			defer wg.Done()
+			maxValues[i] = maximum(data[start:end])
 		}(start, end)
 	}
 
-	// Находим максимальное значение среди всех чанков
-	var max int
-	for i := 0; i < CHUNKS; i++ {
-		val := <-maxValues
-		if i == 0 || val > max {
-			max = val
-		}
-	}
+	// Ждем завершения всех горутин перед возвратом результата
+	wg.Wait()
 
-	return max, nil
+	return maximum(maxValues)
 }
 
 func main() {
 	fmt.Printf("Генерируем %d целых чисел\n\n", SIZE)
 
 	// Генерируем случайные числа
-	randomElements, err := generateRandomElements(SIZE)
-	if err != nil {
-		log.Fatalf("failed to generate random numbers: %v", err)
-	}
+	randomElements := generateRandomElements(SIZE)
 
 	// Измеряем время выполнения последовательного поиска максимума
 	start := time.Now()
 	fmt.Println("Ищем максимальное значение в один поток")
-	max, err := maximum(randomElements)
-	if err != nil {
-		log.Printf("error occurred while finding maximum value in single-threaded mode: %v", err)
-		return
-	}
+	max := maximum(randomElements)
 	elapsed := time.Since(start)
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n\n", max, elapsed.Microseconds())
 
 	// Измеряем время выполнения параллельного поиска максимума
 	start = time.Now()
 	fmt.Printf("Ищем максимальное значение в %d потоков\n", CHUNKS)
-	max, err = maxChunks(randomElements)
-	if err != nil {
-		log.Printf("error occurred while finding maximum value in parallel mode: %v", err)
-		return
-	}
+	max = maxChunks(randomElements)
 	elapsed = time.Since(start)
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, elapsed.Microseconds())
 }
